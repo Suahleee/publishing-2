@@ -1,6 +1,67 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { getEnvironmentData } from 'worker_threads';
+import { CategoryButton } from '../components/CategoryButton';
+import { MovieCard } from '../components/MovieCard';
 import { TextField } from '../components/TextField';
+import movieimageA from '../assets/icons/images/A.jpg';
+import movieimageB from "../assets/icons/images/B.jpg";
+import movieimageC from "../assets/icons/images/C.jpg";
+
+const API_KEY = '59a92fde3fe6d1c421e83c1cab77f227'
+
+
+export type Category = {
+  id: number;
+  label: string;
+  url: string;
+  image: string;
+ };
+ 
+ const CATEGORY_LIST = [
+  { id: 0, label: '인기있는영화', url: '/popular', image:movieimageA },
+  { id: 1, label: '현재 상영작', url: '/now_playing', image: movieimageB},
+  { id: 2, label: '높은 평점의 인기 영화', url: '/top_rated', image: movieimageC},
+  { id: 3, label: '<기생충>과 비슷한 영화', url: '/496243/recommendations', image: movieimageA}
+ ];
+  
+export type Movie = {
+  id: number;
+  title: string;
+  overview: string;
+  poster_path: string;
+  vote_average: number;
+ };
+ 
+
 export const HomePage = () => {
+  const [isLoading, setIsLoading] =useState(true);
+  const[movies, setMovies] = useState<Movie[]> ([]);
+  const [categoryIndex, setCategoryIndex]= useState(0);
+
+  const setCategory = (index:number) => {
+    setCategoryIndex(index);
+  }
+
+
+
+  const getData = async (categoryIndex:number) => {
+    const url= `https://api.themoviedb.org/3/movie${CATEGORY_LIST[categoryIndex].url}?api_key=${API_KEY}&language=ko-KR&page=1`
+    const response = await fetch(url);
+    if(response.status === 200) {
+    //데이터 잘 왔을 때 실행할 내용
+    const data= await response.json();
+    setMovies(data.results);
+
+    } else {
+      throw new Error ("데이터를 받아오지 못했습니다.");
+    }
+    setIsLoading(false);
+  };
+
+useEffect(()=> {
+  getData(categoryIndex);
+},[categoryIndex]);
+
   return ( 
     <div className="m-4 space-y-10">
       <div className="space-y-4">
@@ -17,44 +78,20 @@ export const HomePage = () => {
 
 <div className='flex space-x-6'>
 
-
-  <div>
-    <img src='https://images.unsplash.com/photo-1579398937948-598009379315?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=774&q=80' 
-    alt=''
-    className='w-20 h-20 object-cover rounded-full'/>
-    <div className='text-center'>일식</div>
-  </div>
-
-  <div>
-    <img src='https://images.unsplash.com/photo-1635685296916-95acaf58471f?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=776&q=80'
-    alt=''
-    className='w-20 h-20 object-cover rounded-full'/>
-    <div className='text-center'>중식</div>
-  </div>
-
-  <div>
-    <img src='https://images.unsplash.com/photo-1608731001805-187e9c904388?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1740&q=80'
-    alt=''
-    className='w-20 h-20 object-cover rounded-full'/>
-    <div className='text-center'>한식</div>
-  </div>
-
-  <div>
-    <img src='https://images.unsplash.com/photo-1513104890138-7c749659a591?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1740&q=80'
-    alt=''
-    className='w-20 h-20 object-cover rounded-full'/>
-    <div className='text-center'>양식</div>
-  </div>
+{CATEGORY_LIST.map((data) => (
+<CategoryButton 
+key={data.id} 
+category={data} 
+onClick={setCategory}
+isSelected={data.id === categoryIndex} />
+))}
 
 </div>
-
-
 </div>
 
 
 
-
-      <div>
+      {/*<div>
       <div className="text-2xl font-bold mb-4">List</div>
 
       <div className="border p-4 rounded-md">
@@ -74,24 +111,18 @@ export const HomePage = () => {
           </div>
         </div>
         </div>
-        </div>
+  </div> */}
 
-<div className='ml-3'>
+
 <div className="text-2xl font-bold mb-4">Today's Special</div>
-<div className='flex'>
-<img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1160&q=80"
-alt=""
-className="w-32 h-48 object-cover rounded-2xl"/>
-<div className='ml-4'>
-<div className='font-bold text-xl mb-4'>식당 이름</div>
-<div className='text-gray-700'>말이 필요 없는 서울 최고의</div>
-<div className='text-gray-700 mb-1'>식당 중 하나</div>
-<div className='text-gray-400'>서울시 강남구 청담동</div>
-</div>
-</div>
 
-gi
-<div className='py-5'></div>
+{!isLoading && movies.map((movie) => (
+<MovieCard key={movie.id} movie={movie} />
+))}
+
+
+
+<div className="flex space-x-3">
 
 <div>
 <img src='https://images.unsplash.com/photo-1414235077428-338989a2e8c0?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2070&q=80'
